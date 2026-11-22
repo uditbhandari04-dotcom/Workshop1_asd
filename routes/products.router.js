@@ -1,19 +1,22 @@
-const express = require("express")
-const productRouter = express.Router()
-const controller = require("../controllers/products.controller")
-const productMiddleware = require("../middleware/cacheMemory.middleware")
-const productValidations = require("../middleware/validation.middleware")
+const express = require("express");
+const router = express.Router();
 
-productRouter.get('/',productMiddleware.productsCache, controller.getProducts)
+const {
+  getProducts,
+  getProductId,
+  insertProducts,
+  putProduct,
+  patchProduct,
+  deleteProduct,
+} = require("../controllers/products.controller");
+const { productsCache } = require("../middleware/cacheMemory.middleware");
+const { validatePostReq } = require("../middleware/validation.middleware");
 
-productRouter.get("/:id",productMiddleware.productsCache,controller.getProductId)
+router.get("/", productsCache, getProducts);
+router.get("/:id", productsCache, getProductId);
+router.post("/", validatePostReq, productsCache, insertProducts);
+router.put("/:id", productsCache, putProduct);
+router.patch("/:id", productsCache, patchProduct);
+router.delete("/:id", productsCache, deleteProduct);
 
-productRouter.post("/",productValidations.validatePostReq,productMiddleware.productsCache,controller.insertProducts)
-
-productRouter.put("/:id",productMiddleware.productsCache,controller.putProduct)
-
-productRouter.patch("/:id",productMiddleware.productsCache,controller.patchProduct)
-
-productRouter.delete("/:id",productMiddleware.productsCache,controller.deleteProduct)
-
-module.exports = productRouter
+module.exports = router;

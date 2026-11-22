@@ -1,42 +1,42 @@
-const delayReadData = require("../database/db")
-const cache = {}
+const cache = {};
+const CACHE_TTL_MS = 60 * 1000;
 
-const productsCache = async(req,res,next) => {
-    let url = req.originalUrl
-    let cachedData = cache[url]
+const productsCache = async (req, res, next) => {
+  const currentUrl = req.originalUrl;
+  const cachedRecord = cache[currentUrl];
 
-    if (req.method!=="GET"){
-        Object.keys(cache).forEach((keys)=>{
-            if (cache[keys] && keys.startsWith("/products")){
-                delete cache[keys]
-            }
-        })
-        next()
-        return
-    }
+  if (req.method !== "GET") {
+    Object.keys(cache).forEach((key) => {
+      if (cache[key] && key.startsWith("/products")) {
+        delete cache[key];
+      }
+    });
+    return next();
+  }
 
-    if (cachedData && Date.now()<=cachedData.expiresAt){
-        res.set("cache","HIT")
-        return res.json(cachedData.data)
-    }
+  if (cachedRecord && Date.now() <= cachedRecord.expiresAt) {
+    res.set("cache", "HIT");
+    return res.json(cachedRecord.data);
+  }
 
-    else if (cachedData && Date.now()>cachedData.expiresAt){
-        // console.log("new value assgined")
-        delete cache[url] 
-    }
+  if (cachedRecord && Date.now() > cachedRecord.expiresAt) {
+    delete cache[currentUrl];
+  }
 
-    res.set("cache","MISS")
-    originalJSON  = res.json.bind(res)
-    res.json = (data) => {
-        cache[url] = {
-            data ,
-            expiresAt : Date.now()+(60*1000),  
-        } 
-        return originalJSON(data)
-    }
-    next()
-}
+  res.set("cache", "MISS");
+
+  const originalJson = res.json.bind(res);
+  res.json = (responseData) => {
+    cache[currentUrl] = {
+      data: responseData,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
+    return originalJson(responseData);
+  };
+
+  next();
+};
 
 module.exports = {
-    productsCache
-}
+  productsCache,
+};

@@ -1,11 +1,16 @@
-const validatePostReq = (req,res,next) => {
-    const {name,price} = req.body
-    if (name===undefined || name.trim()==="" || !Number.isInteger(price)){
-        return res.status(400).send("error")
-    }
-    next()
-}
+const validatePostReq = (req, res, next) => {
+  const { name, price } = req.body || {};
+
+  const isInvalidName = name === undefined || typeof name !== "string" || name.trim() === "";
+  const isInvalidPrice = !Number.isInteger(price);
+
+  if (isInvalidName || isInvalidPrice) {
+    return res.status(400).send("error");
+  }
+
+  next();
+};
 
 module.exports = {
-    validatePostReq
-}
+  validatePostReq,
+};
